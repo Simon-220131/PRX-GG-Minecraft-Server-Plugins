@@ -1,4 +1,6 @@
 name: Build Paper Plugins
+run: mvn clean package
+working-directory: ./
 
 on:
   push:
