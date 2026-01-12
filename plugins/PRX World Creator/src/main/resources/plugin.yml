@@ -1,0 +1,17 @@
+name: PRX-World-Creator
+version: '1.0'
+main: at.prx.pRXWorldCreator.PRXWorldCreator
+api-version: '1.21'
+
+commands:
+  worldcontrol:
+    description: Erstellt, löscht Welten. Mit Teleport.
+    usage: /worldcontrol <create | delete | tp | list>
+    permission: op
+    aliases:
+      - wc
+
+permissions:
+  worldcontrol.use:
+    description: Darf WC verwenden!
+    default: op
