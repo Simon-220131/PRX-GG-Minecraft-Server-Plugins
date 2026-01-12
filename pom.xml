@@ -12,7 +12,6 @@
 
     <modules>
         <module>plugins/PRX World Creator</module>
-        <module>plugins/Duell</module>
     </modules>
 
     <properties>
