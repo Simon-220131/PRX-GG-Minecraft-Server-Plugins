@@ -1,6 +1,4 @@
 name: Build Paper Plugins
-run: mvn clean package
-working-directory: ./
 
 on:
   push:
@@ -11,21 +9,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Java setup
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
-      - name: Build plugins
+      - name: Build plugins (Parent POM)
         run: mvn clean package
 
       - name: Prepare artifacts
         run: |
           mkdir deploy
-          cp **/target/*.jar deploy/
+          find . -path "*/target/*.jar" -type f -exec cp {} deploy/ \;
           echo "${{ github.run_number }}" > deploy/build.txt
 
       - name: Upload artifacts
