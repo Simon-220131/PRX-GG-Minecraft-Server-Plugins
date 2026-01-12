@@ -1,0 +1,49 @@
+package at.htlle.util;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
+
+import java.util.*;
+
+public class SpawnConfig {
+
+    public static Map<String, Object> toMap(Location loc) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("world", loc.getWorld().getName());
+        m.put("x", loc.getX());
+        m.put("y", loc.getY());
+        m.put("z", loc.getZ());
+        m.put("yaw", loc.getYaw());
+        m.put("pitch", loc.getPitch());
+        return m;
+    }
+
+    public static Location fromSection(ConfigurationSection s) {
+        if (s == null) return null;
+
+        String wName = s.getString("world");
+        World w = (wName == null) ? null : Bukkit.getWorld(wName);
+        if (w == null) return null;
+
+        double x = s.getDouble("x");
+        double y = s.getDouble("y");
+        double z = s.getDouble("z");
+        float yaw = (float) s.getDouble("yaw");
+        float pitch = (float) s.getDouble("pitch");
+
+        return new Location(w, x, y, z, yaw, pitch);
+    }
+
+    public static List<Location> readLocationList(ConfigurationSection root) {
+        if (root == null) return List.of();
+        List<Location> out = new ArrayList<>();
+        for (String key : root.getKeys(false)) {
+            // falls du irgendwann map-keys statt list nutzt
+            Location l = fromSection(root.getConfigurationSection(key));
+            if (l != null) out.add(l);
+        }
+        return out;
+    }
+}

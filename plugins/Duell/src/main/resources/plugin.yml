@@ -1,0 +1,11 @@
+name: Duel
+version: 1.0.0
+main: at.htlle.DuelPlugin
+api-version: "1.20"
+commands:
+  duel:
+    description: Duel system
+    usage: /duel <invite|accept|deny|cancel|status> ...
+permissions:
+  duel.use:
+    default: true
