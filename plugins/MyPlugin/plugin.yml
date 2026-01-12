@@ -1,0 +1,5 @@
+name: MyPlugin
+version: 1.0
+main: com.example.MyPlugin
+description: My first Minecraft plugin
+authors: [Author]
