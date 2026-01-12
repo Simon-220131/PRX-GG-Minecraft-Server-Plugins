@@ -1,0 +1,33 @@
+name: Build Paper Plugins
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Java setup
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Build plugins
+        run: mvn clean package
+
+      - name: Prepare artifacts
+        run: |
+          mkdir deploy
+          cp **/target/*.jar deploy/
+          echo "${{ github.run_number }}" > deploy/build.txt
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugins
+          path: deploy
