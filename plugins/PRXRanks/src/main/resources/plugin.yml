@@ -1,0 +1,11 @@
+name: PRXRanks
+version: '1.0-SNAPSHOT'
+main: at.prx.pRXRanks.PRXRanks
+api-version: '1.21'
+
+commands:
+  rank:
+    description: Rank command
+permissions:
+  prxranks.admin:
+    default: op
