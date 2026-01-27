@@ -1,0 +1,14 @@
+name: BOD-GamblePlugin
+version: '1.0'
+main: at.prx.gamblePluginTest.GamblePluginTest
+api-version: '1.21'
+
+commands:
+  casino:
+    description: Öffnet das Casino oder lädt es neu
+    usage: /casino [reload]
+
+permissions:
+  casino.admin:
+    description: Darf das Casino neu laden
+    default: op

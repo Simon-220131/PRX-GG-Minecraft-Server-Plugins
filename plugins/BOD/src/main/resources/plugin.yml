@@ -1,0 +1,13 @@
+name: BOD
+version: '1.0-SNAPSHOT'
+main: at.prx.bOD.BOD
+api-version: '1.21'
+commands:
+  unban:
+    description: Entbannt einen Spieler
+    usage: /unban <spieler>
+    permission: bod.unban
+  deaths:
+    description: Manage player death counts
+    usage: /deaths <set|reset|gui> <player> [amount]
+    permission: bod.admin

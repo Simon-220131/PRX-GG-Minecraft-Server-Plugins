@@ -1,0 +1,88 @@
+casino:
+  join-message:
+    enabled: true
+
+slots:
+  symbols:
+
+    # 🔹 SYMBOL-ID (frei wählbar, nur intern)
+    death_skull:
+      display:
+        type: HEAD
+        texture: "BASE64_STRING"
+        name: "☠ Todeskopf"
+
+      weight: 2
+
+      action: INSTANT_BAN
+      outcome: LOSS
+
+      message: "💀 Das Schicksal war gnadenlos."
+
+    poison_eye:
+      display:
+        type: MATERIAL
+        material: SPIDER_EYE
+        name: "☣ Gift"
+
+      weight: 10
+
+      action: POISON
+      poison-seconds: 15
+      outcome: LOSS
+
+      message: "☠ Du wurdest vergiftet!"
+
+    shield_gem:
+      display:
+        type: MATERIAL
+        material: DIAMOND
+        name: "🛡 Bann-Schild"
+
+      weight: 8
+
+      action: BAN_SHIELD
+      outcome: WIN
+
+      message: "🛡 Ein Bann-Schild schützt dich!"
+
+    heal_star:
+      display:
+        type: MATERIAL
+        material: EMERALD
+        name: "❤️ Heilung"
+
+      weight: 15
+
+      action: FULL_HEAL
+      outcome: WIN
+
+      message: "❤️ Deine Lebenspunkte wurden vollständig geheilt."
+
+    reroll:
+      display:
+        type: MATERIAL
+        material: APPLE
+        name: "🔄 Nochmal!"
+
+      weight: 25
+
+      action: FORCE_RESPIN
+      outcome: NEUTRAL
+
+      message: "🔄 Das Rad dreht sich erneut!"
+
+    creeper_boom:
+      display:
+        type: HEAD
+        texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2E0ZTc1YjI1MTc2OTYyNzdlNDJmNjY4MmQxMmQzNmNjZDYyYmUzYmZmZGIyN2E5NzA4Y2Q5OTkzNjYxIn19fQ=="
+        name: "💣 Creeper"
+
+      weight: 8
+      action: SPAWN_CREEPER
+      outcome: LOSS
+
+      creeper:
+        block-damage: false   # 🔥 DAS ist der wichtige Config-Punkt
+
+      message: "<dark_green>💥 Ein Creeper erscheint hinter dir!</dark_green>"

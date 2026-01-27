@@ -1,0 +1,17 @@
+maintenance:
+  enabled: false
+
+  motd: "<red>Currently under Maintenance</red>"
+  version: "<dark_red>Maintenance</dark_red>"
+  sample:
+    - "<dark_red>Currently under Maintenance!</dark_red>"
+
+  whitelist:
+    enabled: true
+    players:
+      - "ProxyFyy"
+
+  kick-message: "<red>This server is currently under maintenance!</red>"
+
+  notify-admins: true
+  notify-message: "<yellow>[Maintenance]</yellow> <gray><player> tried to join the server.</gray>"

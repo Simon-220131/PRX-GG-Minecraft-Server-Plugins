@@ -1,0 +1,12 @@
+name: PRXMaintenance
+version: '1.0'
+main: at.prx.pRXMaintenance.PRXMaintenance
+api-version: '1.21'
+
+commands:
+  maintenance:
+    aliases: [wartung, maint]
+    permission: maintenance.admin
+permissions:
+  maintenance.admin:
+    default: op
