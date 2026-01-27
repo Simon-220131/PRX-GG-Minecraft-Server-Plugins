@@ -13,9 +13,9 @@
     <modules>
         <module>plugins/PRX World Creator</module>
         <module>plugins/PRXRanks</module>
-	<module>plugins/BOD</module>
-	<module>plugins/GamblePlugin</module>
-	<module>plugins/PRXMaintenace</module>
+        <module>plugins/BOD</module>
+        <module>plugins/GamblePlugin</module>
+        <module>plugins/PRXMaintenance</module>
     </modules>
 
     <properties>
