@@ -1,27 +1,35 @@
 package at.prx.pRXRanks.listener;
 
 import at.prx.pRXRanks.manager.RankManager;
-import at.prx.pRXRanks.model.Ranks;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 public class ChatListener implements Listener {
 
-    private final RankManager rankManager;
+    private final RankManager rankService;
 
-    public ChatListener(RankManager rankManager) {
-        this.rankManager = rankManager;
+    public ChatListener(RankManager rankService) {
+        this.rankService = rankService;
     }
 
     @EventHandler
     public void onChat(AsyncPlayerChatEvent event) {
-        Ranks rank = rankManager.getRank(event.getPlayer());
 
-        String prefix = rank.getGlyph() + " §7";
+        // 🔹 Prefix aus LuckPerms
+        String prefix = rankService.getPrefix(event.getPlayer());
+
+        // 🔹 Anzeige-Prefix bauen
+        String displayPrefix = "";
+        if (!prefix.isEmpty()) {
+            displayPrefix = prefix + " §8| §f";
+        }
 
         event.setFormat(
-                prefix + "§f" + event.getPlayer().getName() + " §8» §7" + event.getMessage()
+                displayPrefix
+                        + event.getPlayer().getName()
+                        + " §8» §7"
+                        + event.getMessage()
         );
     }
 }

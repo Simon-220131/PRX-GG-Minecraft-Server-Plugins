@@ -1,79 +1,57 @@
 package at.prx.pRXRanks.manager;
 
-import at.prx.pRXRanks.model.Ranks;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.cacheddata.CachedMetaData;
+import net.luckperms.api.model.user.User;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
-
-import java.io.File;
-import java.io.IOException;
 
 public class RankManager {
 
-    private final JavaPlugin plugin;
-    private File file;
-    private FileConfiguration config;
+    private final LuckPerms luckPerms;
 
-    public RankManager(JavaPlugin plugin) {
-        this.plugin = plugin;
-        loadFile();
-    }
-
-    private void loadFile() {
-        file = new File(plugin.getDataFolder(), "players.yml");
-
-        if (!file.exists()) {
-            try {
-                plugin.getDataFolder().mkdirs();
-                file.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        config = YamlConfiguration.loadConfiguration(file);
+    public RankManager() {
+        this.luckPerms = LuckPermsProvider.get();
     }
 
     /**
-     * Setzt den Rang eines Spielers und speichert ihn
+     * Gibt den Prefix eines Spielers zurück (aus LuckPerms)
+     * Kann leer sein ("")
      */
-    public void setRank(Player player, Ranks rank) {
-        if (player == null || rank == null) return;
+    public String getPrefix(Player player) {
+        if (player == null) return "";
 
-        String path = player.getUniqueId().toString() + ".rank";
-        config.set(path, rank.name());
-        save();
+        User user = luckPerms.getUserManager().getUser(player.getUniqueId());
+        if (user == null) return "";
+
+        CachedMetaData meta = user.getCachedData().getMetaData();
+        String prefix = meta.getPrefix();
+
+        return prefix != null ? prefix : "";
     }
 
     /**
-     * Gibt den Rang eines Spielers zurück
+     * Gibt das Weight der Primary Group zurück
+     * Höher = wichtiger Rang
      */
-    public Ranks getRank(Player player) {
-        if (player == null) return Ranks.SPIELER;
+    public int getWeight(Player player) {
+        if (player == null) return 0;
 
-        String path = player.getUniqueId().toString() + ".rank";
-        String rankName = config.getString(path);
+        User user = luckPerms.getUserManager().getUser(player.getUniqueId());
+        if (user == null) return 0;
 
-        if (rankName == null) {
-            return Ranks.SPIELER;
-        }
-
-        try {
-            return Ranks.valueOf(rankName);
-        } catch (IllegalArgumentException e) {
-            return Ranks.SPIELER;
-        }
+        return user.getCachedData().getMetaData().getPrefixes().firstKey();
     }
 
     /**
-     * Speichert players.yml
+     * Optional: Name der Primary Group (Debug / Info)
      */
-    private void save() {
-        try {
-            config.save(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public String getPrimaryGroup(Player player) {
+        if (player == null) return "default";
+
+        User user = luckPerms.getUserManager().getUser(player.getUniqueId());
+        if (user == null) return "default";
+
+        return user.getPrimaryGroup();
     }
 }

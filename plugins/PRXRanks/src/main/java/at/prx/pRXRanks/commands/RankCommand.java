@@ -51,7 +51,6 @@ public class RankCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        rankManager.setRank(target, rank);
         tablistManager.update(target);
         sender.sendMessage("§aRang von §f" + target.getName() + " §aauf §f" + rank.name() + " §agesetzt.");
         target.sendMessage("§7Dein Rang wurde auf §f" + rank.name() + " §7gesetzt.");

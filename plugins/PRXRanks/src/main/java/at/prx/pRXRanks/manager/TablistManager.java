@@ -1,25 +1,34 @@
 package at.prx.pRXRanks.manager;
 
-import at.prx.pRXRanks.model.Ranks;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 public class TablistManager {
 
-    private final RankManager rankManager;
+    private final RankManager rankService;
 
-    public TablistManager(RankManager rankManager) {
-        this.rankManager = rankManager;
+    public TablistManager(RankManager rankService) {
+        this.rankService = rankService;
     }
 
     public void update(Player player) {
-        Ranks rank = rankManager.getRank(player);
+        if (player == null) return;
+
+        // 🔹 Daten aus LuckPerms
+        String prefix = rankService.getPrefix(player);
+        int weight = rankService.getWeight(player);
+
+        // 🔹 Sortierung (LP-Weight)
+        player.setPlayerListOrder(weight);
+
+        // 🔹 Anzeige bauen
+        String displayPrefix = "";
+        if (!prefix.isEmpty()) {
+            displayPrefix = prefix + " §8| §f";
+        }
 
         player.setPlayerListName(
-                rank.getSortPrefix()
-                        + rank.getGlyph()
-                        + " §f"
-                        + player.getName()
+                displayPrefix + player.getName()
         );
     }
 
