@@ -1,5 +1,6 @@
 package at.prx.pRXRanks.manager;
 
+import at.prx.pRXRanks.util.UnicodeUtil;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.cacheddata.CachedMetaData;
@@ -27,7 +28,8 @@ public class RankManager {
         CachedMetaData meta = user.getCachedData().getMetaData();
         String prefix = meta.getPrefix();
 
-        return prefix != null ? prefix : "";
+//        return prefix != null ? prefix : "";
+        return UnicodeUtil.unescapeUnicode(prefix);
     }
 
     /**

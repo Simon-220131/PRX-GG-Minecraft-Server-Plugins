@@ -35,7 +35,7 @@ public class JoinQuitListener implements Listener {
             displayPrefix = prefix + " §8| §f";
         }
 
-        event.joinMessage(Component.text("§8[§a+§8] " + displayPrefix + event.getPlayer().getName()));
+        event.joinMessage(Component.text("§8[§a+§8] §r" + displayPrefix + event.getPlayer().getName()));
 
         // Initiale Anzeige setzen
         tablistManager.update(event.getPlayer());

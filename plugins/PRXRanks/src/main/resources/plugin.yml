@@ -4,9 +4,3 @@ main: at.prx.pRXRanks.PRXRanks
 api-version: '1.21'
 depend: [LuckPerms]
 
-commands:
-  rank:
-    description: Rank command
-permissions:
-  prxranks.admin:
-    default: op
