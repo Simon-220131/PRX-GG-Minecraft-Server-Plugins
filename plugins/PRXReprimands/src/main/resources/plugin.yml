@@ -1,0 +1,36 @@
+name: PRXReprimands
+version: '1.0'
+main: at.prx.pRXReprimands.PRXReprimands
+api-version: '1.21'
+commands:
+  ban:
+    description: Bannt einen Spieler.
+    usage: /ban <Spieler> [Dauer] <Grund>
+    permission: prxreprimands.ban
+  unban:
+    description: Entbannt einen Spieler.
+    usage: /unban <Spieler>
+    permission: prxreprimands.unban
+  mute:
+    description: Mutet einen Spieler.
+    usage: /mute <Spieler> [Dauer] <Grund>
+    permission: prxreprimands.mute
+  unmute:
+    description: Entmutet einen Spieler.
+    usage: /unmute <Spieler>
+    permission: prxreprimands.unmute
+  kick:
+    description: Kickt einen Spieler.
+    usage: /kick <Spieler> [Grund]
+    permission: prxreprimands.kick
+permissions:
+  prxreprimands.ban:
+    default: op
+  prxreprimands.unban:
+    default: op
+  prxreprimands.mute:
+    default: op
+  prxreprimands.unmute:
+    default: op
+  prxreprimands.kick:
+    default: op
