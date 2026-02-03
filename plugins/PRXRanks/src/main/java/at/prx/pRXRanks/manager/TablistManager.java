@@ -27,9 +27,7 @@ public class TablistManager {
             displayPrefix = prefix + " §8| §f";
         }
 
-        player.setPlayerListName(
-                displayPrefix + player.getName()
-        );
+        player.setPlayerListName(displayPrefix + player.getName());
     }
 
     public void updateAll() {
