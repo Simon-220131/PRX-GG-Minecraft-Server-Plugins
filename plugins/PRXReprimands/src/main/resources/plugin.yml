@@ -1,4 +1,4 @@
-name: PRXReprimands
+﻿name: PRXReprimands
 version: '1.0'
 main: at.prx.pRXReprimands.PRXReprimands
 api-version: '1.21'
@@ -23,6 +23,38 @@ commands:
     description: Kickt einen Spieler.
     usage: /kick <Spieler> [Grund]
     permission: prxreprimands.kick
+  warn:
+    description: Verwarnt einen Spieler.
+    usage: /warn <Spieler> <Grund>
+    permission: prxreprimands.warn
+  warns:
+    description: Zeigt Verwarnungen eines Spielers.
+    usage: /warns <Spieler>
+    permission: prxreprimands.warns
+  clearwarns:
+    description: LÃ¶scht alle Verwarnungen eines Spielers.
+    usage: /clearwarns <Spieler>
+    permission: prxreprimands.clearwarns
+  removewarn:
+    description: LÃ¶scht eine einzelne Verwarnung.
+    usage: /removewarn <Spieler> <ID>
+    permission: prxreprimands.removewarn
+  note:
+    description: FÃ¼gt eine Staff-Note hinzu.
+    usage: /note <Spieler> <Notiz>
+    permission: prxreprimands.note
+  notes:
+    description: Zeigt Staff-Notes eines Spielers.
+    usage: /notes <Spieler> [Seite]
+    permission: prxreprimands.notes
+  removenote:
+    description: LÃ¶scht eine einzelne Staff-Note.
+    usage: /removenote <Spieler> <ID>
+    permission: prxreprimands.removenote
+  history:
+    description: Zeigt Straf-Historie eines Spielers.
+    usage: /history <Spieler> [Seite]
+    permission: prxreprimands.history
 permissions:
   prxreprimands.ban:
     default: op
@@ -33,4 +65,20 @@ permissions:
   prxreprimands.unmute:
     default: op
   prxreprimands.kick:
+    default: op
+  prxreprimands.warn:
+    default: op
+  prxreprimands.warns:
+    default: op
+  prxreprimands.clearwarns:
+    default: op
+  prxreprimands.removewarn:
+    default: op
+  prxreprimands.note:
+    default: op
+  prxreprimands.notes:
+    default: op
+  prxreprimands.removenote:
+    default: op
+  prxreprimands.history:
     default: op

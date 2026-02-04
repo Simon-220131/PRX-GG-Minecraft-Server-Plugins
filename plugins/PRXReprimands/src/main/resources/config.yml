@@ -7,3 +7,15 @@ database:
   pool-size: 10
   connection-timeout-ms: 10000
   refresh-interval-seconds: 30
+warnings:
+  auto-escalation:
+    enabled: true
+    rules:
+      - count: 3
+        action: "MUTE"
+        duration: "1d"
+        reason: "Zu viele Verwarnungen"
+      - count: 5
+        action: "BAN"
+        duration: "7d"
+        reason: "Zu viele Verwarnungen"

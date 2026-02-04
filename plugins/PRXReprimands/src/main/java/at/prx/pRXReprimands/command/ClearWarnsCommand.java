@@ -1,29 +1,29 @@
 package at.prx.pRXReprimands.command;
 
-import at.prx.pRXReprimands.manager.PunishmentManager;
 import at.prx.pRXReprimands.logging.ReprimandLogger;
+import at.prx.pRXReprimands.manager.PunishmentManager;
 import at.prx.pRXReprimands.util.MessageUtil;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
-public class UnbanCommand implements CommandExecutor {
+public class ClearWarnsCommand implements CommandExecutor {
     private final PunishmentManager punishmentManager;
     private final ReprimandLogger reprimandLogger;
 
-    public UnbanCommand(PunishmentManager punishmentManager, ReprimandLogger reprimandLogger) {
+    public ClearWarnsCommand(PunishmentManager punishmentManager, ReprimandLogger reprimandLogger) {
         this.punishmentManager = punishmentManager;
         this.reprimandLogger = reprimandLogger;
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!at.prx.pRXReprimands.util.CommandUtil.requirePermission(sender, "prxreprimands.unban")) {
+        if (!at.prx.pRXReprimands.util.CommandUtil.requirePermission(sender, "prxreprimands.clearwarns")) {
             return true;
         }
         if (args.length < 1) {
-            sender.sendMessage(MessageUtil.color(MessageUtil.PREFIX + "&7Nutze: &f/unban <Spieler>"));
+            sender.sendMessage(MessageUtil.color(MessageUtil.PREFIX + "&7Nutze: &f/clearwarns <Spieler>"));
             return true;
         }
 
@@ -33,14 +33,11 @@ public class UnbanCommand implements CommandExecutor {
             return true;
         }
 
-        if (punishmentManager.unban(target.getUniqueId())) {
-            punishmentManager.save();
-            sender.sendMessage(MessageUtil.color(MessageUtil.PREFIX + "&a" + target.getName() + " &7ist entbannt."));
-            reprimandLogger.log("UNBAN: " + sender.getName() + " -> " + target.getName()
-                    + " (" + target.getUniqueId() + ")");
-        } else {
-            sender.sendMessage(MessageUtil.color(MessageUtil.PREFIX + "&e" + target.getName() + " &7ist nicht gebannt."));
-        }
+        int removed = punishmentManager.clearWarnings(target.getUniqueId());
+        sender.sendMessage(MessageUtil.color(MessageUtil.PREFIX + "&aWarns von &f" + target.getName()
+                + " &7wurden gelöscht. &7Anzahl: &f" + removed));
+        reprimandLogger.log("CLEARWARNS: " + sender.getName() + " -> " + target.getName()
+                + " (" + target.getUniqueId() + ") removed=" + removed);
         return true;
     }
 }

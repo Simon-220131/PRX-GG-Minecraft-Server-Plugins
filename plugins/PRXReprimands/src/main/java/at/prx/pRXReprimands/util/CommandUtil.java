@@ -23,6 +23,14 @@ public final class CommandUtil {
         return new ParsedInput(-1L, reason);
     }
 
+    public static boolean requirePermission(org.bukkit.command.CommandSender sender, String permission) {
+        if (sender.hasPermission(permission)) {
+            return true;
+        }
+        sender.sendMessage(MessageUtil.color(MessageUtil.PREFIX + "&cKeine Berechtigung."));
+        return false;
+    }
+
     public record ParsedInput(long durationMillis, String reason) {
     }
 }

@@ -23,6 +23,9 @@ public class MuteCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!CommandUtil.requirePermission(sender, "prxreprimands.mute")) {
+            return true;
+        }
         if (args.length < 1) {
             sender.sendMessage(MessageUtil.color(MessageUtil.PREFIX + "&7Nutze: &f/mute <Spieler> [Dauer] <Grund>"));
             return true;

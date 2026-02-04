@@ -2,7 +2,10 @@ package at.prx.pRXReprimands.manager;
 
 import at.prx.pRXReprimands.model.PunishmentRecord;
 import at.prx.pRXReprimands.model.PunishmentType;
+import at.prx.pRXReprimands.model.PunishmentHistoryRecord;
 import at.prx.pRXReprimands.storage.DatabaseManager;
+import at.prx.pRXReprimands.model.WarningRecord;
+import at.prx.pRXReprimands.model.NoteRecord;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
@@ -45,6 +48,7 @@ public class PunishmentManager {
         );
         bans.put(record.target(), record);
         databaseManager.upsertPunishment(record);
+        databaseManager.addPunishmentHistory(record);
     }
 
     public void mute(OfflinePlayer target, String actor, String reason, long durationMillis) {
@@ -61,11 +65,13 @@ public class PunishmentManager {
         );
         mutes.put(record.target(), record);
         databaseManager.upsertPunishment(record);
+        databaseManager.addPunishmentHistory(record);
     }
 
     public boolean unban(UUID target) {
         PunishmentRecord removed = bans.remove(target);
         if (removed != null) {
+            databaseManager.closePunishmentHistory(target, PunishmentType.BAN, System.currentTimeMillis());
             databaseManager.deletePunishment(target, PunishmentType.BAN);
             return true;
         }
@@ -75,6 +81,7 @@ public class PunishmentManager {
     public boolean unmute(UUID target) {
         PunishmentRecord removed = mutes.remove(target);
         if (removed != null) {
+            databaseManager.closePunishmentHistory(target, PunishmentType.MUTE, System.currentTimeMillis());
             databaseManager.deletePunishment(target, PunishmentType.MUTE);
             return true;
         }
@@ -119,6 +126,55 @@ public class PunishmentManager {
         bans.values().removeIf(PunishmentRecord::isExpired);
         mutes.values().removeIf(PunishmentRecord::isExpired);
         databaseManager.cleanupExpired();
+    }
+
+    public int addWarning(OfflinePlayer target, String actor, String reason) {
+        return databaseManager.addWarning(target.getUniqueId(), target.getName(), actor, reason);
+    }
+
+    public int getWarningCount(UUID target) {
+        return databaseManager.getWarningCount(target);
+    }
+
+    public List<WarningRecord> listWarnings(UUID target) {
+        return databaseManager.listWarnings(target);
+    }
+
+    public int clearWarnings(UUID target) {
+        return databaseManager.clearWarnings(target);
+    }
+
+    public WarningRecord getWarningById(long id) {
+        return databaseManager.getWarningById(id);
+    }
+
+    public boolean deleteWarning(long id) {
+        return databaseManager.deleteWarning(id);
+    }
+
+    public long addNote(OfflinePlayer target, String actor, String note) {
+        return databaseManager.addNote(target.getUniqueId(), target.getName(), actor, note);
+    }
+
+    public List<NoteRecord> listNotes(UUID target) {
+        return databaseManager.listNotes(target);
+    }
+
+    public int getHistoryCount(UUID target) {
+        return databaseManager.getHistoryCount(target);
+    }
+
+    public List<PunishmentHistoryRecord> listHistory(UUID target, int offset, int limit) {
+        return databaseManager.listHistory(target, offset, limit);
+    }
+
+
+    public NoteRecord getNoteById(long id) {
+        return databaseManager.getNoteById(id);
+    }
+
+    public boolean deleteNote(long id) {
+        return databaseManager.deleteNote(id);
     }
 
     public void refreshFromDatabase() {

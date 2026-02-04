@@ -19,6 +19,9 @@ public class KickCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!at.prx.pRXReprimands.util.CommandUtil.requirePermission(sender, "prxreprimands.kick")) {
+            return true;
+        }
         if (args.length < 1) {
             sender.sendMessage(MessageUtil.color(MessageUtil.PREFIX + "&7Nutze: &f/kick <Spieler> [Grund]"));
             return true;

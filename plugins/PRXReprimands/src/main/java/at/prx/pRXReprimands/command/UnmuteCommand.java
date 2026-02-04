@@ -19,6 +19,9 @@ public class UnmuteCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!at.prx.pRXReprimands.util.CommandUtil.requirePermission(sender, "prxreprimands.unmute")) {
+            return true;
+        }
         if (args.length < 1) {
             sender.sendMessage(MessageUtil.color(MessageUtil.PREFIX + "&7Nutze: &f/unmute <Spieler>"));
             return true;

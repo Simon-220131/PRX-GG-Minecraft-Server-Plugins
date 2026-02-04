@@ -23,6 +23,9 @@ public class BanCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!CommandUtil.requirePermission(sender, "prxreprimands.ban")) {
+            return true;
+        }
         if (args.length < 1) {
             sender.sendMessage(MessageUtil.color(MessageUtil.PREFIX + "&7Nutze: &f/ban <Spieler> [Dauer] <Grund>"));
             return true;
