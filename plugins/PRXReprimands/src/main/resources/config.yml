@@ -1,0 +1,9 @@
+database:
+  host: "127.0.0.1"
+  port: 3306
+  name: "prxreprimands"
+  user: "prx"
+  password: "Test123"
+  pool-size: 10
+  connection-timeout-ms: 10000
+  refresh-interval-seconds: 30
