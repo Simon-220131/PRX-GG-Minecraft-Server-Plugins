@@ -4,6 +4,8 @@ import at.prx.pRXReprimands.logging.ReprimandLogger;
 import at.prx.pRXReprimands.manager.PunishmentManager;
 import at.prx.pRXReprimands.model.PunishmentRecord;
 import at.prx.pRXReprimands.model.PunishmentType;
+import at.prx.pRXReprimands.util.BroadcastUtil;
+import at.prx.pRXReprimands.util.CommandUtil;
 import at.prx.pRXReprimands.util.MessageUtil;
 import at.prx.pRXReprimands.util.TimeUtil;
 import net.kyori.adventure.title.Title;
@@ -47,8 +49,13 @@ public class WarnCommand implements CommandExecutor {
             sender.sendMessage(MessageUtil.color(MessageUtil.PREFIX + "&cSpieler nicht gefunden oder noch nie online."));
             return true;
         }
+        if (CommandUtil.isBypassed(target, "prxreprimands.bypass.warn")) {
+            sender.sendMessage(MessageUtil.color(MessageUtil.PREFIX + "&cDieser Spieler ist von Warns ausgenommen."));
+            return true;
+        }
 
         String reason = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        reason = CommandUtil.resolveReasonTemplate(plugin, reason);
         int warns = punishmentManager.addWarning(target, sender.getName(), reason);
 
         sender.sendMessage(MessageUtil.color(MessageUtil.PREFIX + "&a" + target.getName()
@@ -106,9 +113,15 @@ public class WarnCommand implements CommandExecutor {
             }
 
             if ("MUTE".equals(action)) {
+                if (CommandUtil.isBypassed(target, "prxreprimands.bypass.mute")) {
+                    return;
+                }
                 punishmentManager.mute(target, actor, reason, durationMillis);
                 notifyEscalation(target, PunishmentType.MUTE, reason, durationMillis, actor);
             } else if ("BAN".equals(action)) {
+                if (CommandUtil.isBypassed(target, "prxreprimands.bypass.ban")) {
+                    return;
+                }
                 punishmentManager.ban(target, actor, reason, durationMillis);
                 notifyEscalation(target, PunishmentType.BAN, reason, durationMillis, actor);
             }
@@ -125,11 +138,23 @@ public class WarnCommand implements CommandExecutor {
                 ? TimeUtil.formatRemaining(System.currentTimeMillis() + durationMillis)
                 : "Permanent";
         if (type == PunishmentType.BAN) {
+            BroadcastUtil.send(plugin, "broadcasts.ban", Map.of(
+                    "actor", actor,
+                    "target", target.getName(),
+                    "duration", durationText,
+                    "reason", reason
+            ));
             Player online = Bukkit.getPlayer(target.getUniqueId());
             if (online != null) {
                 online.kick(MessageUtil.banScreen(reason, durationText));
             }
         } else if (type == PunishmentType.MUTE) {
+            BroadcastUtil.send(plugin, "broadcasts.mute", Map.of(
+                    "actor", actor,
+                    "target", target.getName(),
+                    "duration", durationText,
+                    "reason", reason
+            ));
             Player online = Bukkit.getPlayer(target.getUniqueId());
             if (online != null) {
                 String muteMessage = MessageUtil.color("&cDu wurdest gemutet! &7Grund: &f" + reason);

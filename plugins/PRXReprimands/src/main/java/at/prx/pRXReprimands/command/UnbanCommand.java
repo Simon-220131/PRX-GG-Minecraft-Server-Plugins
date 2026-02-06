@@ -2,19 +2,25 @@ package at.prx.pRXReprimands.command;
 
 import at.prx.pRXReprimands.manager.PunishmentManager;
 import at.prx.pRXReprimands.logging.ReprimandLogger;
+import at.prx.pRXReprimands.util.BroadcastUtil;
 import at.prx.pRXReprimands.util.MessageUtil;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.Plugin;
+
+import java.util.Map;
 
 public class UnbanCommand implements CommandExecutor {
     private final PunishmentManager punishmentManager;
     private final ReprimandLogger reprimandLogger;
+    private final Plugin plugin;
 
-    public UnbanCommand(PunishmentManager punishmentManager, ReprimandLogger reprimandLogger) {
+    public UnbanCommand(PunishmentManager punishmentManager, ReprimandLogger reprimandLogger, Plugin plugin) {
         this.punishmentManager = punishmentManager;
         this.reprimandLogger = reprimandLogger;
+        this.plugin = plugin;
     }
 
     @Override
@@ -36,6 +42,10 @@ public class UnbanCommand implements CommandExecutor {
         if (punishmentManager.unban(target.getUniqueId())) {
             punishmentManager.save();
             sender.sendMessage(MessageUtil.color(MessageUtil.PREFIX + "&a" + target.getName() + " &7ist entbannt."));
+            BroadcastUtil.send(plugin, "broadcasts.unban", Map.of(
+                    "actor", sender.getName(),
+                    "target", target.getName()
+            ));
             reprimandLogger.log("UNBAN: " + sender.getName() + " -> " + target.getName()
                     + " (" + target.getUniqueId() + ")");
         } else {

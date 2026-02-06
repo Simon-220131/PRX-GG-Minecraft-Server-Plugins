@@ -3,6 +3,7 @@ package at.prx.pRXReprimands.manager;
 import at.prx.pRXReprimands.model.PunishmentRecord;
 import at.prx.pRXReprimands.model.PunishmentType;
 import at.prx.pRXReprimands.model.PunishmentHistoryRecord;
+import at.prx.pRXReprimands.model.StatsSnapshot;
 import at.prx.pRXReprimands.storage.DatabaseManager;
 import at.prx.pRXReprimands.model.WarningRecord;
 import at.prx.pRXReprimands.model.NoteRecord;
@@ -12,6 +13,7 @@ import org.bukkit.OfflinePlayer;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -31,7 +33,6 @@ public class PunishmentManager {
     }
 
     public void save() {
-        databaseManager.cleanupExpired();
     }
 
     public void ban(OfflinePlayer target, String actor, String reason, long durationMillis) {
@@ -92,7 +93,6 @@ public class PunishmentManager {
         PunishmentRecord record = bans.get(target);
         if (record != null && record.isExpired()) {
             bans.remove(target);
-            databaseManager.deletePunishment(target, PunishmentType.BAN);
             return null;
         }
         if (record != null) {
@@ -109,7 +109,6 @@ public class PunishmentManager {
         PunishmentRecord record = mutes.get(target);
         if (record != null && record.isExpired()) {
             mutes.remove(target);
-            databaseManager.deletePunishment(target, PunishmentType.MUTE);
             return null;
         }
         if (record != null) {
@@ -125,7 +124,21 @@ public class PunishmentManager {
     public void cleanupExpired() {
         bans.values().removeIf(PunishmentRecord::isExpired);
         mutes.values().removeIf(PunishmentRecord::isExpired);
-        databaseManager.cleanupExpired();
+    }
+
+    public List<PunishmentRecord> consumeExpired() {
+        List<PunishmentRecord> expired = new ArrayList<>();
+        for (PunishmentRecord record : databaseManager.loadExpiredPunishments()) {
+            if (record.type() == PunishmentType.BAN) {
+                bans.remove(record.target());
+            } else if (record.type() == PunishmentType.MUTE) {
+                mutes.remove(record.target());
+            }
+            databaseManager.closePunishmentHistory(record.target(), record.type(), record.endMillis());
+            databaseManager.deletePunishment(record.target(), record.type());
+            expired.add(record);
+        }
+        return expired;
     }
 
     public int addWarning(OfflinePlayer target, String actor, String reason) {
@@ -175,6 +188,19 @@ public class PunishmentManager {
 
     public boolean deleteNote(long id) {
         return databaseManager.deleteNote(id);
+    }
+
+    public StatsSnapshot getStatsSnapshot(int topLimit) {
+        int totalPunishments = databaseManager.getPunishmentHistoryCount();
+        int totalWarnings = databaseManager.getWarningTotalCount();
+        return new StatsSnapshot(
+                totalPunishments,
+                totalWarnings,
+                databaseManager.getPunishmentCountsByType(),
+                databaseManager.getActivePunishmentCountsByType(),
+                databaseManager.getTopPunishmentReasons(topLimit),
+                databaseManager.getTopWarningReasons(topLimit)
+        );
     }
 
     public void refreshFromDatabase() {

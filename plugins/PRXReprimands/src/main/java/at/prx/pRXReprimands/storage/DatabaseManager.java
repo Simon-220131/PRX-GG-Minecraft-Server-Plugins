@@ -4,6 +4,7 @@ import at.prx.pRXReprimands.model.NoteRecord;
 import at.prx.pRXReprimands.model.PunishmentHistoryRecord;
 import at.prx.pRXReprimands.model.PunishmentRecord;
 import at.prx.pRXReprimands.model.PunishmentType;
+import at.prx.pRXReprimands.model.ReasonCount;
 import at.prx.pRXReprimands.model.WarningRecord;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -15,7 +16,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class DatabaseManager implements AutoCloseable {
@@ -77,6 +80,32 @@ public class DatabaseManager implements AutoCloseable {
             }
         } catch (SQLException ex) {
             plugin.getLogger().severe("Failed to load punishments: " + ex.getMessage());
+        }
+        return records;
+    }
+
+    public List<PunishmentRecord> loadExpiredPunishments() {
+        long now = System.currentTimeMillis();
+        String sql = "SELECT type, target_uuid, target_name, actor, reason, start_ms, end_ms "
+                + "FROM prx_reprimands WHERE end_ms > 0 AND end_ms <= ?";
+        List<PunishmentRecord> records = new ArrayList<>();
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, now);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    PunishmentType type = PunishmentType.valueOf(rs.getString("type"));
+                    UUID target = UUID.fromString(rs.getString("target_uuid"));
+                    String targetName = rs.getString("target_name");
+                    String actor = rs.getString("actor");
+                    String reason = rs.getString("reason");
+                    long start = rs.getLong("start_ms");
+                    long end = rs.getLong("end_ms");
+                    records.add(new PunishmentRecord(type, target, targetName, actor, reason, start, end));
+                }
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().severe("Failed to load expired punishments: " + ex.getMessage());
         }
         return records;
     }
@@ -160,6 +189,61 @@ public class DatabaseManager implements AutoCloseable {
             plugin.getLogger().severe("Failed to get history count: " + ex.getMessage());
         }
         return 0;
+    }
+
+    public int getPunishmentHistoryCount() {
+        String sql = "SELECT COUNT(*) AS cnt FROM prx_reprimands_history";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt("cnt");
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().severe("Failed to get punishment history count: " + ex.getMessage());
+        }
+        return 0;
+    }
+
+    public Map<PunishmentType, Integer> getPunishmentCountsByType() {
+        String sql = "SELECT type, COUNT(*) AS cnt FROM prx_reprimands_history GROUP BY type";
+        Map<PunishmentType, Integer> counts = new EnumMap<>(PunishmentType.class);
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            while (rs.next()) {
+                String type = rs.getString("type");
+                try {
+                    counts.put(PunishmentType.valueOf(type), rs.getInt("cnt"));
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().severe("Failed to get punishment counts: " + ex.getMessage());
+        }
+        return counts;
+    }
+
+    public Map<PunishmentType, Integer> getActivePunishmentCountsByType() {
+        long now = System.currentTimeMillis();
+        String sql = "SELECT type, COUNT(*) AS cnt FROM prx_reprimands WHERE end_ms = 0 OR end_ms > ? GROUP BY type";
+        Map<PunishmentType, Integer> counts = new EnumMap<>(PunishmentType.class);
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, now);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String type = rs.getString("type");
+                    try {
+                        counts.put(PunishmentType.valueOf(type), rs.getInt("cnt"));
+                    } catch (IllegalArgumentException ignored) {
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().severe("Failed to get active punishment counts: " + ex.getMessage());
+        }
+        return counts;
     }
 
     public List<PunishmentHistoryRecord> listHistory(UUID target, int offset, int limit) {
@@ -272,6 +356,64 @@ public class DatabaseManager implements AutoCloseable {
             plugin.getLogger().severe("Failed to get warning count: " + ex.getMessage());
         }
         return 0;
+    }
+
+    public int getWarningTotalCount() {
+        String sql = "SELECT COUNT(*) AS cnt FROM prx_warnings";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt("cnt");
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().severe("Failed to get warning total count: " + ex.getMessage());
+        }
+        return 0;
+    }
+
+    public List<ReasonCount> getTopPunishmentReasons(int limit) {
+        String sql = "SELECT reason, COUNT(*) AS cnt FROM prx_reprimands_history "
+                + "WHERE reason <> '' GROUP BY reason ORDER BY cnt DESC LIMIT ?";
+        List<ReasonCount> reasons = new ArrayList<>();
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, limit);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String reason = rs.getString("reason");
+                    if (reason == null || reason.trim().isEmpty()) {
+                        continue;
+                    }
+                    reasons.add(new ReasonCount(reason.trim(), rs.getInt("cnt")));
+                }
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().severe("Failed to get punishment reasons: " + ex.getMessage());
+        }
+        return reasons;
+    }
+
+    public List<ReasonCount> getTopWarningReasons(int limit) {
+        String sql = "SELECT reason, COUNT(*) AS cnt FROM prx_warnings "
+                + "WHERE reason <> '' GROUP BY reason ORDER BY cnt DESC LIMIT ?";
+        List<ReasonCount> reasons = new ArrayList<>();
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, limit);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String reason = rs.getString("reason");
+                    if (reason == null || reason.trim().isEmpty()) {
+                        continue;
+                    }
+                    reasons.add(new ReasonCount(reason.trim(), rs.getInt("cnt")));
+                }
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().severe("Failed to get warning reasons: " + ex.getMessage());
+        }
+        return reasons;
     }
 
     public List<WarningRecord> listWarnings(UUID target) {

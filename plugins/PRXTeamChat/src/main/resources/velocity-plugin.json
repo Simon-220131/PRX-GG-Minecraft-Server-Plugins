@@ -1,0 +1,8 @@
+{
+  "id": "prxteamchat",
+  "name": "PRXTeamChat",
+  "version": "1.0",
+  "main": "at.prx.pRXTeamChat.PRXTeamChat",
+  "description": "Proxy TeamChat for staff across the network.",
+  "authors": ["PRX"]
+}

@@ -1,4 +1,4 @@
-package at.prx.pRXReprimands.command;
+package at.prx.pRXReprimands.command.completer;
 
 import at.prx.pRXReprimands.manager.PunishmentManager;
 import org.bukkit.Bukkit;
