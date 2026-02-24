@@ -1,56 +1,38 @@
 package at.prx.pRXReprimands.manager;
 
-import at.prx.pRXReprimands.PRXReprimands;
 import at.prx.pRXReprimands.model.PunishmentRecord;
 import at.prx.pRXReprimands.model.PunishmentType;
-
+import at.prx.pRXReprimands.model.PunishmentHistoryRecord;
+import at.prx.pRXReprimands.model.StatsSnapshot;
+import at.prx.pRXReprimands.storage.DatabaseManager;
+import at.prx.pRXReprimands.model.WarningRecord;
+import at.prx.pRXReprimands.model.NoteRecord;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class PunishmentManager {
-    private final PRXReprimands plugin;
-    private final File dataFile;
-    private final Map<UUID, PunishmentRecord> bans = new HashMap<>();
-    private final Map<UUID, PunishmentRecord> mutes = new HashMap<>();
+    private final DatabaseManager databaseManager;
+    private final Map<UUID, PunishmentRecord> bans = new ConcurrentHashMap<>();
+    private final Map<UUID, PunishmentRecord> mutes = new ConcurrentHashMap<>();
 
-    public PunishmentManager(PRXReprimands plugin) {
-        this.plugin = plugin;
-        this.dataFile = new File(plugin.getDataFolder(), "punishments.yml");
+    public PunishmentManager(DatabaseManager databaseManager) {
+        this.databaseManager = databaseManager;
     }
 
     public void load() {
         bans.clear();
         mutes.clear();
-        if (!dataFile.exists()) {
-            return;
-        }
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(dataFile);
-        loadSection(config.getConfigurationSection("bans"), PunishmentType.BAN, bans);
-        loadSection(config.getConfigurationSection("mutes"), PunishmentType.MUTE, mutes);
-        cleanupExpired();
+        applyRecords(databaseManager.loadActivePunishments());
     }
 
     public void save() {
-        YamlConfiguration config = new YamlConfiguration();
-        saveSection(config, "bans", bans);
-        saveSection(config, "mutes", mutes);
-        try {
-            if (!dataFile.getParentFile().exists()) {
-                dataFile.getParentFile().mkdirs();
-            }
-            config.save(dataFile);
-        } catch (IOException ignored) {
-        }
     }
 
     public void ban(OfflinePlayer target, String actor, String reason, long durationMillis) {
@@ -66,6 +48,8 @@ public class PunishmentManager {
                 end
         );
         bans.put(record.target(), record);
+        databaseManager.upsertPunishment(record);
+        databaseManager.addPunishmentHistory(record);
     }
 
     public void mute(OfflinePlayer target, String actor, String reason, long durationMillis) {
@@ -81,14 +65,28 @@ public class PunishmentManager {
                 end
         );
         mutes.put(record.target(), record);
+        databaseManager.upsertPunishment(record);
+        databaseManager.addPunishmentHistory(record);
     }
 
     public boolean unban(UUID target) {
-        return bans.remove(target) != null;
+        PunishmentRecord removed = bans.remove(target);
+        if (removed != null) {
+            databaseManager.closePunishmentHistory(target, PunishmentType.BAN, System.currentTimeMillis());
+            databaseManager.deletePunishment(target, PunishmentType.BAN);
+            return true;
+        }
+        return false;
     }
 
     public boolean unmute(UUID target) {
-        return mutes.remove(target) != null;
+        PunishmentRecord removed = mutes.remove(target);
+        if (removed != null) {
+            databaseManager.closePunishmentHistory(target, PunishmentType.MUTE, System.currentTimeMillis());
+            databaseManager.deletePunishment(target, PunishmentType.MUTE);
+            return true;
+        }
+        return false;
     }
 
     public PunishmentRecord getBan(UUID target) {
@@ -97,7 +95,14 @@ public class PunishmentManager {
             bans.remove(target);
             return null;
         }
-        return record;
+        if (record != null) {
+            return record;
+        }
+        PunishmentRecord fromDb = databaseManager.getActivePunishment(target, PunishmentType.BAN);
+        if (fromDb != null) {
+            bans.put(target, fromDb);
+        }
+        return fromDb;
     }
 
     public PunishmentRecord getMute(UUID target) {
@@ -106,12 +111,100 @@ public class PunishmentManager {
             mutes.remove(target);
             return null;
         }
-        return record;
+        if (record != null) {
+            return record;
+        }
+        PunishmentRecord fromDb = databaseManager.getActivePunishment(target, PunishmentType.MUTE);
+        if (fromDb != null) {
+            mutes.put(target, fromDb);
+        }
+        return fromDb;
     }
 
     public void cleanupExpired() {
         bans.values().removeIf(PunishmentRecord::isExpired);
         mutes.values().removeIf(PunishmentRecord::isExpired);
+    }
+
+    public List<PunishmentRecord> consumeExpired() {
+        List<PunishmentRecord> expired = new ArrayList<>();
+        for (PunishmentRecord record : databaseManager.loadExpiredPunishments()) {
+            if (record.type() == PunishmentType.BAN) {
+                bans.remove(record.target());
+            } else if (record.type() == PunishmentType.MUTE) {
+                mutes.remove(record.target());
+            }
+            databaseManager.closePunishmentHistory(record.target(), record.type(), record.endMillis());
+            databaseManager.deletePunishment(record.target(), record.type());
+            expired.add(record);
+        }
+        return expired;
+    }
+
+    public int addWarning(OfflinePlayer target, String actor, String reason) {
+        return databaseManager.addWarning(target.getUniqueId(), target.getName(), actor, reason);
+    }
+
+    public int getWarningCount(UUID target) {
+        return databaseManager.getWarningCount(target);
+    }
+
+    public List<WarningRecord> listWarnings(UUID target) {
+        return databaseManager.listWarnings(target);
+    }
+
+    public int clearWarnings(UUID target) {
+        return databaseManager.clearWarnings(target);
+    }
+
+    public WarningRecord getWarningById(long id) {
+        return databaseManager.getWarningById(id);
+    }
+
+    public boolean deleteWarning(long id) {
+        return databaseManager.deleteWarning(id);
+    }
+
+    public long addNote(OfflinePlayer target, String actor, String note) {
+        return databaseManager.addNote(target.getUniqueId(), target.getName(), actor, note);
+    }
+
+    public List<NoteRecord> listNotes(UUID target) {
+        return databaseManager.listNotes(target);
+    }
+
+    public int getHistoryCount(UUID target) {
+        return databaseManager.getHistoryCount(target);
+    }
+
+    public List<PunishmentHistoryRecord> listHistory(UUID target, int offset, int limit) {
+        return databaseManager.listHistory(target, offset, limit);
+    }
+
+
+    public NoteRecord getNoteById(long id) {
+        return databaseManager.getNoteById(id);
+    }
+
+    public boolean deleteNote(long id) {
+        return databaseManager.deleteNote(id);
+    }
+
+    public StatsSnapshot getStatsSnapshot(int topLimit) {
+        int totalPunishments = databaseManager.getPunishmentHistoryCount();
+        int totalWarnings = databaseManager.getWarningTotalCount();
+        return new StatsSnapshot(
+                totalPunishments,
+                totalWarnings,
+                databaseManager.getPunishmentCountsByType(),
+                databaseManager.getActivePunishmentCountsByType(),
+                databaseManager.getTopPunishmentReasons(topLimit),
+                databaseManager.getTopWarningReasons(topLimit)
+        );
+    }
+
+    public void refreshFromDatabase() {
+        applyRecords(databaseManager.loadActivePunishments());
     }
 
     public List<String> getBannedNames() {
@@ -143,40 +236,20 @@ public class PunishmentManager {
         return player;
     }
 
-    private void loadSection(ConfigurationSection section,
-                             PunishmentType type,
-                             Map<UUID, PunishmentRecord> map) {
-        if (section == null) {
-            return;
-        }
-        for (String key : section.getKeys(false)) {
-            try {
-                UUID uuid = UUID.fromString(key);
-                ConfigurationSection entry = section.getConfigurationSection(key);
-                if (entry == null) {
-                    continue;
-                }
-                String targetName = entry.getString("targetName");
-                String actor = entry.getString("actor", "Console");
-                String reason = entry.getString("reason", "Keine Angabe");
-                long start = entry.getLong("start", System.currentTimeMillis());
-                long end = entry.getLong("end", 0L);
-                map.put(uuid, new PunishmentRecord(type, uuid, targetName, actor, reason, start, end));
-            } catch (IllegalArgumentException ignored) {
+    private void applyRecords(List<PunishmentRecord> records) {
+        Map<UUID, PunishmentRecord> nextBans = new ConcurrentHashMap<>();
+        Map<UUID, PunishmentRecord> nextMutes = new ConcurrentHashMap<>();
+        for (PunishmentRecord record : records) {
+            if (record.type() == PunishmentType.BAN) {
+                nextBans.put(record.target(), record);
+            } else if (record.type() == PunishmentType.MUTE) {
+                nextMutes.put(record.target(), record);
             }
         }
-    }
-
-    private void saveSection(YamlConfiguration config,
-                             String path,
-                             Map<UUID, PunishmentRecord> map) {
-        for (PunishmentRecord record : map.values()) {
-            String key = path + "." + record.target();
-            config.set(key + ".targetName", record.targetName());
-            config.set(key + ".actor", record.actor());
-            config.set(key + ".reason", record.reason());
-            config.set(key + ".start", record.startMillis());
-            config.set(key + ".end", record.endMillis());
-        }
+        bans.clear();
+        bans.putAll(nextBans);
+        mutes.clear();
+        mutes.putAll(nextMutes);
+        cleanupExpired();
     }
 }

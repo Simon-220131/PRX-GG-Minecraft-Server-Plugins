@@ -23,7 +23,7 @@ public final class MessageUtil {
     }
 
     public static Component banScreen(String reason, String durationText) {
-        String message = "&8&m--------------------------------\n"
+        String message = "\n&8&m--------------------------------\n"
                 + "&c&lGEBANNT\n"
                 + "&7Grund: &f" + reason + "\n"
                 + "&7Dauer: &f" + durationText + "\n"
