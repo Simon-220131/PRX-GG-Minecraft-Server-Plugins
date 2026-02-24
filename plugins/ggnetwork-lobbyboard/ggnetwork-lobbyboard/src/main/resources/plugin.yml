@@ -1,0 +1,6 @@
+name: GGNetworkLobbyBoard
+version: 1.0.0
+main: at.prx.ggnetwork.lobbyboard.GGNetworkLobbyBoardPlugin
+api-version: '1.21'
+depend: [LuckPerms]
+author: prx

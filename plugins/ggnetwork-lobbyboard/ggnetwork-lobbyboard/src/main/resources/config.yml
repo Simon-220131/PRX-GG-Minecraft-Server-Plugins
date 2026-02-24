@@ -1,0 +1,52 @@
+# GGNetwork LobbyBoard
+
+# Title text (without animation). Animation is applied in code.
+title-text: "GG-NETWORK"
+server-ip: "gg-network.net"
+
+# Title palette (hex colors) used for the animated gradient.
+title-palette:
+  - "#ff004c"
+  - "#6a00ff"
+  - "#00d4ff"
+
+# Static label gradient (non-animated)
+label-gradient:
+  start: "#ff004c"
+  end: "#6a00ff"
+
+# Update intervals (ticks)
+# 20 ticks = 1 second
+update:
+  title: 3
+  ping: 20
+  online: 40
+  nametags: 20
+
+# Ping number color thresholds (ms)
+# ping <= green-max  -> green
+# ping <= yellow-max -> yellow
+# ping > yellow-max  -> red
+ping-colors:
+  green-max: 79
+  yellow-max: 149
+
+# Glyphs (you can replace with your custom font unicode chars)
+# Example placeholders use Private Use Area. Replace to your actual glyphs.
+glyphs:
+  rank: "\uE010"
+  ping: "\uE015"
+
+# Rank glyph can be different per LP group (optional). If not present, uses glyphs.rank.
+# Key must be the LP group name (primary group).
+#group-glyphs:
+#  admin: "\uE201"
+#  moderator: "\uE202"
+#  premium: "\uE203"
+
+# Display name behavior
+rank:
+  # If true, uses LuckPerms group's display name (if set), else falls back to group name.
+  use-group-display-name: false
+  # If true, rank name line is white; set false to allow MiniMessage styling in code.
+  rank-name-white: false

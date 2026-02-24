@@ -1,0 +1,4 @@
+name: PRXLobbySB
+version: '1.0'
+main: at.prx.pRXLobbySB.PRXLobbySB
+api-version: '1.21'
